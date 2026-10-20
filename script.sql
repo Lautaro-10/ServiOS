@@ -1,0 +1,72 @@
+DROP DATABASE IF EXISTS ServiOSDB;
+CREATE DATABASE ServiOSDB;
+USE ServiOSDB;
+
+CREATE TABLE Clientes (
+    Id INT AUTO_INCREMENT PRIMARY KEY,
+    Dni VARCHAR(15) NOT NULL UNIQUE,
+    Nombre VARCHAR(50) NOT NULL,
+    Apellido VARCHAR(50) NOT NULL,
+    Telefono VARCHAR(50),
+    Email VARCHAR(100),
+    FechaAlta DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE Equipos (
+    Id INT AUTO_INCREMENT PRIMARY KEY,
+    ClienteId INT NOT NULL,
+    Marca VARCHAR(50) NOT NULL,
+    Modelo VARCHAR(50) NOT NULL,
+    Imei VARCHAR(20) NOT NULL UNIQUE,
+    ClaveDesbloqueo VARCHAR(50),
+    ObservacionesEsteticas VARCHAR(255),
+    Activo TINYINT(1) NOT NULL DEFAULT 1,
+    FOREIGN KEY (ClienteId) REFERENCES Clientes(Id)
+);
+
+CREATE TABLE TiposServicio (
+    Id INT AUTO_INCREMENT PRIMARY KEY,
+    Descripcion VARCHAR(100) NOT NULL,
+    CostoBaseEstimado DECIMAL(10,2) NOT NULL DEFAULT 0.00
+);
+
+CREATE TABLE Usuarios (
+    Id INT AUTO_INCREMENT PRIMARY KEY,
+    Nombre VARCHAR(50) NOT NULL,
+    Apellido VARCHAR(50) NOT NULL,
+    Email VARCHAR(100) NOT NULL UNIQUE,
+    PasswordHash VARCHAR(255) NOT NULL,
+    Rol VARCHAR(20) NOT NULL DEFAULT 'Tecnico',
+    Avatar VARCHAR(255),
+    Activo TINYINT(1) NOT NULL DEFAULT 1
+);
+
+CREATE TABLE OrdenesReparacion (
+    Id INT AUTO_INCREMENT PRIMARY KEY,
+    EquipoId INT NOT NULL,
+    TipoServicioId INT NOT NULL,
+    UsuarioTecnicoId INT NULL,
+    FechaIngreso DATE NOT NULL,
+    FechaPrometida DATE,
+    FechaEntregaReal DATE,
+    FallaDeclarada VARCHAR(255) NOT NULL,
+    DiagnosticoTecnico TEXT,
+    CostoRepuestos DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    CostoManoObra DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    Estado VARCHAR(30) NOT NULL DEFAULT 'Recibido',
+    FOREIGN KEY (EquipoId) REFERENCES Equipos(Id),
+    FOREIGN KEY (TipoServicioId) REFERENCES TiposServicio(Id),
+    FOREIGN KEY (UsuarioTecnicoId) REFERENCES Usuarios(Id)
+);
+
+CREATE TABLE Pagos (
+    Id INT AUTO_INCREMENT PRIMARY KEY,
+    OrdenId INT NOT NULL,
+    UsuarioCobroId INT NOT NULL,
+    FechaPago DATETIME DEFAULT CURRENT_TIMESTAMP,
+    Importe DECIMAL(10,2) NOT NULL,
+    Concepto VARCHAR(100) NOT NULL,
+    Anulado TINYINT(1) NOT NULL DEFAULT 0,
+    FOREIGN KEY (OrdenId) REFERENCES OrdenesReparacion(Id),
+    FOREIGN KEY (UsuarioCobroId) REFERENCES Usuarios(Id)
+);
