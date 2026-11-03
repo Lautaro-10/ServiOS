@@ -1,0 +1,48 @@
+@model ServiOS.Models.Pago
+
+@{
+    ViewData["Title"] = "Detalle del Pago #" + Model.Id;
+}
+
+<div class="card shadow-sm mx-auto" style="max-width: 600px;">
+    <div class="card-header @(Model.Anulado ? "bg-danger" : "bg-success") text-white">
+        <h4 class="mb-0">Comprobante de Pago #@Model.Id</h4>
+    </div>
+    <div class="card-body">
+        <dl class="row mb-0">
+            <dt class="col-sm-4">Estado</dt>
+            <dd class="col-sm-8">
+                @(Model.Anulado ? "ANULADO (Baja lógica)" : "VIGENTE / APROBADO")
+            </dd>
+
+            <dt class="col-sm-4">Fecha y Hora</dt>
+            <dd class="col-sm-8">@Model.FechaPago.ToString("dd/MM/yyyy HH:mm:ss")</dd>
+
+            <dt class="col-sm-4">Importe</dt>
+            <dd class="col-sm-8"><strong class="fs-5 text-success">$@Model.Importe</strong></dd>
+
+            <dt class="col-sm-4">Concepto</dt>
+            <dd class="col-sm-8">@Model.Concepto</dd>
+
+            <dt class="col-sm-12"><hr /></dt>
+
+            <dt class="col-sm-4">Orden Asociada</dt>
+            <dd class="col-sm-8">Orden #@Model.OrdenId</dd>
+
+            <dt class="col-sm-4">Dispositivo</dt>
+            <dd class="col-sm-8">@Model.Orden?.Equipo?.Marca @Model.Orden?.Equipo?.Modelo (IMEI: @Model.Orden?.Equipo?.Imei)</dd>
+
+            <dt class="col-sm-4">Cliente</dt>
+            <dd class="col-sm-8">@Model.Orden?.Equipo?.Cliente?.NombreCompleto (DNI: @Model.Orden?.Equipo?.Cliente?.Dni)</dd>
+
+            <dt class="col-sm-4">Cobrado por</dt>
+            <dd class="col-sm-8">@Model.UsuarioCobro?.Apellido, @Model.UsuarioCobro?.Nombre</dd>
+        </dl>
+    </div>
+    <div class="card-footer d-flex justify-content-between">
+        <a asp-action="Index" class="btn btn-secondary">Volver al listado</a>
+        @if (!Model.Anulado) {
+            <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-outline-danger">Anular Pago</a>
+        }
+    </div>
+</div>
