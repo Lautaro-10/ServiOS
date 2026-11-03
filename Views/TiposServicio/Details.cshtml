@@ -1,0 +1,24 @@
+@model ServiOS.Models.TipoServicio
+
+@{
+    ViewData["Title"] = "Detalle del Servicio";
+}
+
+<div class="card shadow-sm mx-auto" style="max-width: 600px;">
+    <div class="card-header bg-dark text-white">
+        <h4 class="mb-0">Servicio #@Model.Id</h4>
+    </div>
+    <div class="card-body">
+        <dl class="row mb-0">
+            <dt class="col-sm-4">Descripción</dt>
+            <dd class="col-sm-8">@Model.Descripcion</dd>
+
+            <dt class="col-sm-4">Costo Base</dt>
+            <dd class="col-sm-8">$@Model.CostoBaseEstimado</dd>
+        </dl>
+    </div>
+    <div class="card-footer d-flex justify-content-between">
+        <a asp-action="Index" class="btn btn-secondary">Volver al listado</a>
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Editar</a>
+    </div>
+</div>

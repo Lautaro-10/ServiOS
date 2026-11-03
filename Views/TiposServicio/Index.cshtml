@@ -1,0 +1,35 @@
+@model IEnumerable<ServiOS.Models.TipoServicio>
+
+@{
+    ViewData["Title"] = "Tipos de Servicio";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Catálogo de Servicios</h2>
+    <a asp-action="Create" class="btn btn-primary">+ Nuevo Servicio</a>
+</div>
+
+<table class="table table-striped table-hover shadow-sm">
+    <thead class="table-dark">
+        <tr>
+            <th>ID</th>
+            <th>Descripción / Rubro</th>
+            <th>Costo Base Estimado</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>@item.Id</td>
+            <td><strong>@item.Descripcion</strong></td>
+            <td>$@item.CostoBaseEstimado</td>
+            <td>
+                <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-info text-white">Detalles</a>
+                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">Editar</a>
+                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Eliminar</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

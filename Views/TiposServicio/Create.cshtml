@@ -1,0 +1,33 @@
+@model ServiOS.Models.TipoServicio
+
+@{
+    ViewData["Title"] = "Nuevo Tipo de Servicio";
+}
+
+<div class="card shadow-sm mx-auto" style="max-width: 600px;">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0">Registrar Rubro / Servicio</h4>
+    </div>
+    <div class="card-body">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+            <div class="mb-3">
+                <label asp-for="Descripcion" class="form-label">Descripción</label>
+                <input asp-for="Descripcion" class="form-control" placeholder="Ej: Cambio de Módulo, Pin de Carga, Microelectrónica" />
+                <span asp-validation-for="Descripcion" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="CostoBaseEstimado" class="form-label"></label>
+                <input asp-for="CostoBaseEstimado" class="form-control" type="number" step="0.01" />
+                <span asp-validation-for="CostoBaseEstimado" class="text-danger"></span>
+            </div>
+
+            <div class="d-flex justify-content-between">
+                <a asp-action="Index" class="btn btn-secondary">Volver</a>
+                <button type="submit" class="btn btn-success">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
