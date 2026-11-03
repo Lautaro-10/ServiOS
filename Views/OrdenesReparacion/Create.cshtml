@@ -1,0 +1,84 @@
+@model ServiOS.Models.OrdenReparacion
+
+@{
+    ViewData["Title"] = "Crear Orden de Reparación";
+}
+
+<div class="card shadow-sm mx-auto" style="max-width: 750px;">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0">Apertura de Orden Técnica</h4>
+    </div>
+    <div class="card-body">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+            <div class="mb-3">
+                <label asp-for="EquipoId" class="form-label">Equipo y Dueño</label>
+                <select asp-for="EquipoId" class="form-select" asp-items="ViewBag.Equipos">
+                    <option value="">-- Seleccionar Equipo --</option>
+                </select>
+                <span asp-validation-for="EquipoId" class="text-danger"></span>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label asp-for="TipoServicioId" class="form-label">Tipo de Servicio / Rubro</label>
+                    <select asp-for="TipoServicioId" class="form-select" asp-items="ViewBag.TiposServicio">
+                        <option value="">-- Seleccionar Rubro --</option>
+                    </select>
+                    <span asp-validation-for="TipoServicioId" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="UsuarioTecnicoId" class="form-label">Técnico Asignado</label>
+                    <select asp-for="UsuarioTecnicoId" class="form-select" asp-items="ViewBag.Tecnicos">
+                        <option value="">-- Sin asignar / En espera --</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label asp-for="FechaIngreso" class="form-label"></label>
+                    <input asp-for="FechaIngreso" class="form-control" type="date" />
+                    <span asp-validation-for="FechaIngreso" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="FechaPrometida" class="form-label"></label>
+                    <input asp-for="FechaPrometida" class="form-control" type="date" />
+                    <span asp-validation-for="FechaPrometida" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="FallaDeclarada" class="form-label"></label>
+                <input asp-for="FallaDeclarada" class="form-control" placeholder="Ej: No enciende tras caída, consumo en corto en línea principal" />
+                <span asp-validation-for="FallaDeclarada" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="DiagnosticoTecnico" class="form-label"></label>
+                <textarea asp-for="DiagnosticoTecnico" class="form-control" rows="2" placeholder="Mediciones previas, consumo en fuente de alimentación..."></textarea>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label asp-for="CostoRepuestos" class="form-label"></label>
+                    <input asp-for="CostoRepuestos" class="form-control" type="number" step="0.01" />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="CostoManoObra" class="form-label"></label>
+                    <input asp-for="CostoManoObra" class="form-control" type="number" step="0.01" />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Estado" class="form-label"></label>
+                    <select asp-for="Estado" class="form-select" asp-items="ViewBag.Estados"></select>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between mt-4">
+                <a asp-action="Index" class="btn btn-secondary">Volver</a>
+                <button type="submit" class="btn btn-success">Crear Orden</button>
+            </div>
+        </form>
+    </div>
+</div>

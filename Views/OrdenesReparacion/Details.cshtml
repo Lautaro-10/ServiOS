@@ -1,0 +1,64 @@
+@model ServiOS.Models.OrdenReparacion
+
+@{
+    ViewData["Title"] = "Detalle de Orden #" + Model.Id;
+}
+
+<div class="card shadow-sm mx-auto" style="max-width: 800px;">
+    <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+        <h4 class="mb-0">Orden de Reparación #@Model.Id</h4>
+        <span class="badge bg-warning text-dark fs-6">@Model.Estado</span>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6 border-end">
+                <h5 class="text-primary">Dispositivo y Cliente</h5>
+                <p class="mb-1"><strong>Equipo:</strong> @Model.Equipo?.Marca @Model.Equipo?.Modelo</p>
+                <p class="mb-1"><strong>IMEI:</strong> <code>@Model.Equipo?.Imei</code></p>
+                <p class="mb-1"><strong>PIN / Patrón:</strong> @(Model.Equipo?.ClaveDesbloqueo ?? "Sin clave")</p>
+                <p class="mb-1"><strong>Cliente:</strong> @Model.Equipo?.Cliente?.NombreCompleto</p>
+                <p class="mb-1"><strong>Teléfono:</strong> @(Model.Equipo?.Cliente?.Telefono ?? "-")</p>
+            </div>
+            <div class="col-md-6 ps-md-4">
+                <h5 class="text-primary">Datos Técnicos</h5>
+                <p class="mb-1"><strong>Rubro:</strong> @Model.TipoServicio?.Descripcion</p>
+                <p class="mb-1"><strong>Técnico Asignado:</strong> @(Model.Tecnico != null ? Model.Tecnico.Nombre + " " + Model.Tecnico.Apellido : "Sin asignar")</p>
+                <p class="mb-1"><strong>Fecha Ingreso:</strong> @Model.FechaIngreso.ToString("dd/MM/yyyy")</p>
+                <p class="mb-1"><strong>Fecha Prometida:</strong> @(Model.FechaPrometida.HasValue ? Model.FechaPrometida.Value.ToString("dd/MM/yyyy") : "A convenir")</p>
+            </div>
+        </div>
+
+        <hr />
+
+        <div class="mb-3">
+            <h6 class="text-secondary">Falla Declarada por el Cliente:</h6>
+            <div class="p-2 bg-light rounded border">@Model.FallaDeclarada</div>
+        </div>
+
+        <div class="mb-3">
+            <h6 class="text-secondary">Informe / Diagnóstico del Laboratorio:</h6>
+            <div class="p-2 bg-light rounded border">@(Model.DiagnosticoTecnico ?? "En espera de revisión técnica.")</div>
+        </div>
+
+        <hr />
+
+        <div class="row text-center">
+            <div class="col-4">
+                <span class="text-muted d-block">Repuestos</span>
+                <strong>$@Model.CostoRepuestos</strong>
+            </div>
+            <div class="col-4">
+                <span class="text-muted d-block">Mano de Obra</span>
+                <strong>$@Model.CostoManoObra</strong>
+            </div>
+            <div class="col-4">
+                <span class="text-muted d-block">Total Presupuestado</span>
+                <h4 class="text-success mb-0">$@Model.CostoTotal</h4>
+            </div>
+        </div>
+    </div>
+    <div class="card-footer d-flex justify-content-between">
+        <a asp-action="Index" class="btn btn-secondary">Volver al listado</a>
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Modificar / Actualizar Estado</a>
+    </div>
+</div>
