@@ -1,0 +1,61 @@
+@model ServiOS.Models.Equipo
+
+@{
+    ViewData["Title"] = "Registrar Dispositivo";
+}
+
+<div class="card shadow-sm mx-auto" style="max-width: 650px;">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0">Ingreso de Dispositivo Móvil</h4>
+    </div>
+    <div class="card-body">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+            <div class="mb-3">
+                <label asp-for="ClienteId" class="form-label">Cliente (Dueño)</label>
+                <select asp-for="ClienteId" class="form-select" asp-items="ViewBag.Clientes">
+                    <option value="">-- Seleccione un cliente --</option>
+                </select>
+                <span asp-validation-for="ClienteId" class="text-danger"></span>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col">
+                    <label asp-for="Marca" class="form-label"></label>
+                    <input asp-for="Marca" class="form-control" placeholder="Ej: Xiaomi, Apple, Samsung" />
+                    <span asp-validation-for="Marca" class="text-danger"></span>
+                </div>
+                <div class="col">
+                    <label asp-for="Modelo" class="form-label"></label>
+                    <input asp-for="Modelo" class="form-control" placeholder="Ej: POCO F6 Pro, A30s" />
+                    <span asp-validation-for="Modelo" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col">
+                    <label asp-for="Imei" class="form-label"></label>
+                    <input asp-for="Imei" class="form-control" />
+                    <span asp-validation-for="Imei" class="text-danger"></span>
+                </div>
+                <div class="col">
+                    <label asp-for="ClaveDesbloqueo" class="form-label"></label>
+                    <input asp-for="ClaveDesbloqueo" class="form-control" placeholder="PIN o descripción de patrón" />
+                    <span asp-validation-for="ClaveDesbloqueo" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="ObservacionesEsteticas" class="form-label"></label>
+                <textarea asp-for="ObservacionesEsteticas" class="form-control" rows="2" placeholder="Tapa rayada, módulo despegado, etc."></textarea>
+                <span asp-validation-for="ObservacionesEsteticas" class="text-danger"></span>
+            </div>
+
+            <div class="d-flex justify-content-between">
+                <a asp-action="Index" class="btn btn-secondary">Volver</a>
+                <button type="submit" class="btn btn-success">Guardar Equipo</button>
+            </div>
+        </form>
+    </div>
+</div>
