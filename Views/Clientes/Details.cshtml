@@ -1,0 +1,33 @@
+@model ServiOS.Models.Cliente
+
+@{
+    ViewData["Title"] = "Detalle del Cliente";
+}
+
+<div class="card shadow-sm mx-auto" style="max-width: 650px;">
+    <div class="card-header bg-info text-white">
+        <h4 class="mb-0">Ficha del Cliente</h4>
+    </div>
+    <div class="card-body">
+        <dl class="row mb-0">
+            <dt class="col-sm-4">DNI</dt>
+            <dd class="col-sm-8">@Model.Dni</dd>
+
+            <dt class="col-sm-4">Nombre Completo</dt>
+            <dd class="col-sm-8">@Model.NombreCompleto</dd>
+
+            <dt class="col-sm-4">Teléfono</dt>
+            <dd class="col-sm-8">@(Model.Telefono ?? "No registrado")</dd>
+
+            <dt class="col-sm-4">Email</dt>
+            <dd class="col-sm-8">@(Model.Email ?? "No registrado")</dd>
+
+            <dt class="col-sm-4">Fecha de Alta</dt>
+            <dd class="col-sm-8">@Model.FechaAlta.ToString("dd/MM/yyyy HH:mm")</dd>
+        </dl>
+    </div>
+    <div class="card-footer d-flex justify-content-between">
+        <a asp-action="Index" class="btn btn-secondary">Volver al listado</a>
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Editar</a>
+    </div>
+</div>
