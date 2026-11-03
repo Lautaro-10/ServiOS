@@ -1,0 +1,43 @@
+@model ServiOS.Models.Equipo
+
+@{
+    ViewData["Title"] = "Ficha del Dispositivo";
+}
+
+<div class="card shadow-sm mx-auto" style="max-width: 650px;">
+    <div class="card-header bg-dark text-white">
+        <h4 class="mb-0">@Model.Marca @Model.Modelo</h4>
+    </div>
+    <div class="card-body">
+        <dl class="row mb-0">
+            <dt class="col-sm-4">IMEI / Nro. Serie</dt>
+            <dd class="col-sm-8"><code>@Model.Imei</code></dd>
+
+            <dt class="col-sm-4">PIN / Desbloqueo</dt>
+            <dd class="col-sm-8">@(Model.ClaveDesbloqueo ?? "Sin clave")</dd>
+
+            <dt class="col-sm-4">Estado Estético</dt>
+            <dd class="col-sm-8">@(Model.ObservacionesEsteticas ?? "Sin observaciones")</dd>
+
+            <dt class="col-sm-4">Estado en Taller</dt>
+            <dd class="col-sm-8">
+                @(Model.Activo ? "Habilitado para reparaciones" : "Archivado / Inactivo")
+            </dd>
+
+            <dt class="col-sm-12"><hr /></dt>
+
+            <dt class="col-sm-4">Dueño</dt>
+            <dd class="col-sm-8">@Model.Cliente?.NombreCompleto</dd>
+
+            <dt class="col-sm-4">DNI Dueño</dt>
+            <dd class="col-sm-8">@Model.Cliente?.Dni</dd>
+
+            <dt class="col-sm-4">Teléfono Dueño</dt>
+            <dd class="col-sm-8">@Model.Cliente?.Telefono</dd>
+        </dl>
+    </div>
+    <div class="card-footer d-flex justify-content-between">
+        <a asp-action="Index" class="btn btn-secondary">Volver</a>
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Editar</a>
+    </div>
+</div>
