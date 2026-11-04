@@ -82,28 +82,78 @@ public class OrdenesReparacionController : Controller
     }
 
     // GET: OrdenesReparacion
-    public IActionResult Index()
+
+public IActionResult Index(string? busqueda, string? estado, int pagina = 1, int tamanio = 5)
+{
+    if (pagina < 1) pagina = 1;
+    if (tamanio < 1) tamanio = 5;
+
+    int totalRegistros = 0;
+    var ordenes = new List<OrdenReparacion>();
+
+    using (var connection = new MySqlConnection(_connectionString))
     {
-        var ordenes = new List<OrdenReparacion>();
+        connection.Open();
 
-        using (var connection = new MySqlConnection(_connectionString))
+        string whereClause = " WHERE 1=1 ";
+        if (!string.IsNullOrWhiteSpace(busqueda))
         {
-            connection.Open();
-            string sql = @"SELECT o.Id, o.FechaIngreso, o.FechaPrometida, o.FechaEntregaReal,
-                                  o.FallaDeclarada, o.CostoRepuestos, o.CostoManoObra, o.Estado,
-                                  e.Marca, e.Modelo, e.Imei,
-                                  c.Nombre AS CliNombre, c.Apellido AS CliApellido,
-                                  ts.Descripcion AS TipoServicioDesc,
-                                  u.Nombre AS TecNombre, u.Apellido AS TecApellido
-                           FROM OrdenesReparacion o
-                           INNER JOIN Equipos e ON o.EquipoId = e.Id
-                           INNER JOIN Clientes c ON e.ClienteId = c.Id
-                           INNER JOIN TiposServicio ts ON o.TipoServicioId = ts.Id
-                           LEFT JOIN Usuarios u ON o.UsuarioTecnicoId = u.Id
-                           ORDER BY o.FechaIngreso DESC";
+            whereClause += @" AND (e.Marca LIKE @busqueda 
+                                OR e.Modelo LIKE @busqueda 
+                                OR e.Imei LIKE @busqueda 
+                                OR c.Nombre LIKE @busqueda 
+                                OR c.Apellido LIKE @busqueda 
+                                OR c.Dni LIKE @busqueda) ";
+        }
 
-            using var command = new MySqlCommand(sql, connection);
-            using var reader = command.ExecuteReader();
+        if (!string.IsNullOrWhiteSpace(estado))
+        {
+            whereClause += " AND o.Estado = @estado ";
+        }
+
+        string sqlCount = $@"SELECT COUNT(1) 
+                            FROM OrdenesReparacion o
+                            INNER JOIN Equipos e ON o.EquipoId = e.Id
+                            INNER JOIN Clientes c ON e.ClienteId = c.Id
+                            {whereClause}";
+
+        using (var cmdCount = new MySqlCommand(sqlCount, connection))
+        {
+            if (!string.IsNullOrWhiteSpace(busqueda))
+                cmdCount.Parameters.AddWithValue("@busqueda", $"%{busqueda}%");
+            if (!string.IsNullOrWhiteSpace(estado))
+                cmdCount.Parameters.AddWithValue("@estado", estado);
+
+            totalRegistros = Convert.ToInt32(cmdCount.ExecuteScalar());
+        }
+        
+        int offset = (pagina - 1) * tamanio;
+        string sqlDatos = $@"SELECT o.Id, o.FechaIngreso, o.FechaPrometida, o.FechaEntregaReal,
+                                   o.FallaDeclarada, o.CostoRepuestos, o.CostoManoObra, o.Estado,
+                                   e.Marca, e.Modelo, e.Imei,
+                                   c.Nombre AS CliNombre, c.Apellido AS CliApellido,
+                                   ts.Descripcion AS TipoServicioDesc,
+                                   u.Nombre AS TecNombre, u.Apellido AS TecApellido
+                            FROM OrdenesReparacion o
+                            INNER JOIN Equipos e ON o.EquipoId = e.Id
+                            INNER JOIN Clientes c ON e.ClienteId = c.Id
+                            INNER JOIN TiposServicio ts ON o.TipoServicioId = ts.Id
+                            LEFT JOIN Usuarios u ON o.UsuarioTecnicoId = u.Id
+                            {whereClause}
+                            ORDER BY o.Id DESC
+                            LIMIT @tamanio OFFSET @offset";
+
+        using (var cmdDatos = new MySqlCommand(sqlDatos, connection))
+        {
+            if (!string.IsNullOrWhiteSpace(busqueda))
+                cmdDatos.Parameters.AddWithValue("@busqueda", $"%{busqueda}%");
+            if (!string.IsNullOrWhiteSpace(estado))
+                cmdDatos.Parameters.AddWithValue("@estado", estado);
+
+            cmdDatos.Parameters.AddWithValue("@tamanio", tamanio);
+            cmdDatos.Parameters.AddWithValue("@offset", offset);
+
+            using var reader = cmdDatos.ExecuteReader();
             while (reader.Read())
             {
                 ordenes.Add(new OrdenReparacion
@@ -139,9 +189,21 @@ public class OrdenesReparacionController : Controller
                 });
             }
         }
-
-        return View(ordenes);
     }
+
+    var modeloPaginado = new PaginacionRespuesta<OrdenReparacion>
+    {
+        Elementos = ordenes,
+        PaginaActual = pagina,
+        TamanioPagina = tamanio,
+        TotalRegistros = totalRegistros,
+        TotalPaginas = (int)Math.Ceiling(totalRegistros / (double)tamanio),
+        Busqueda = busqueda,
+        EstadoFiltro = estado
+    };
+
+    return View(modeloPaginado);
+}
 
     // GET: OrdenesReparacion/Details/5
     public IActionResult Details(int id)
