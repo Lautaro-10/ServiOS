@@ -14,7 +14,6 @@ ServiOS es una aplicación web desarrollada con ASP.NET Core MVC y MySQL para la
 
 1. Instalar el SDK de .NET requerido por `ServiOS.csproj` y MySQL/MariaDB.
 2. Ejecutar `script.sql` en una instalación nueva. Este script elimina y vuelve a crear `ServiOSDB`.
-3. Para una base existente, ejecutar `database/migrations/20261105_add_orden_adjuntos.sql` sin recrear la base.
 4. Configurar `ConnectionStrings:DefaultConnection` en `appsettings.Development.json` o mediante la variable de entorno `ConnectionStrings__DefaultConnection`.
 5. Ejecutar `dotnet restore` y `dotnet run`.
 

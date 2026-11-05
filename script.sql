@@ -70,3 +70,11 @@ CREATE TABLE Pagos (
     FOREIGN KEY (OrdenId) REFERENCES OrdenesReparacion(Id),
     FOREIGN KEY (UsuarioCobroId) REFERENCES Usuarios(Id)
 );
+
+CREATE TABLE OrdenAdjuntos (
+    Id INT AUTO_INCREMENT PRIMARY KEY,
+    OrdenId INT NOT NULL,
+    RutaArchivo VARCHAR(255) NOT NULL,
+    FechaSubida DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (OrdenId) REFERENCES OrdenesReparacion(Id)
+);

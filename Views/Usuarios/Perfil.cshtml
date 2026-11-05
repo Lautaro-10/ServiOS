@@ -1,0 +1,43 @@
+@model ServiOS.Models.Usuario
+
+@{
+    ViewData["Title"] = "Mi perfil";
+    var avatarUrl = string.IsNullOrWhiteSpace(Model.Avatar) ? null : Model.Avatar;
+}
+
+<div class="card shadow-sm mx-auto" style="max-width: 600px;">
+    <div class="card-header bg-primary text-white"><h4 class="mb-0">Mi perfil</h4></div>
+    <div class="card-body">
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger">@TempData["Error"]</div>
+        }
+        @if (TempData["Mensaje"] != null)
+        {
+            <div class="alert alert-success">@TempData["Mensaje"]</div>
+        }
+        <div class="text-center mb-4">
+            @if (avatarUrl != null)
+            {
+                <img src="@avatarUrl" alt="Avatar de @Model.Nombre" class="rounded-circle border" width="128" height="128" />
+            }
+            else
+            {
+                <div class="rounded-circle bg-secondary text-white d-inline-flex align-items-center justify-content-center fs-1" style="width:128px;height:128px;">
+                    @(string.IsNullOrEmpty(Model.Nombre) ? "?" : Model.Nombre.Substring(0, 1).ToUpperInvariant())
+                </div>
+            }
+            <h5 class="mt-3 mb-1">@Model.Nombre @Model.Apellido</h5>
+            <div class="text-muted">@Model.Email</div>
+            <span class="badge bg-secondary mt-2">@Model.Rol</span>
+        </div>
+        <form asp-action="Perfil" method="post" enctype="multipart/form-data">
+            <div class="mb-3">
+                <label for="avatar" class="form-label">Actualizar avatar</label>
+                <input id="avatar" name="avatar" type="file" class="form-control" accept=".jpg,.jpeg,.png,.webp" required />
+                <div class="form-text">JPG, PNG o WEBP. Tamaño máximo: 5 MB.</div>
+            </div>
+            <button type="submit" class="btn btn-primary">Guardar avatar</button>
+        </form>
+    </div>
+</div>

@@ -91,6 +91,10 @@ artifacts/
 # ASP.NET Scaffolding
 ScaffoldingReadMe.txt
 
+# Uploaded user content
+/App_Data/uploads/
+/wwwroot/uploads/
+
 # StyleCop
 StyleCopReport.xml
 
