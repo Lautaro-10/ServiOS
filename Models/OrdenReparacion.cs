@@ -55,4 +55,6 @@ public class OrdenReparacion
 
     [Display(Name = "Costo Total")]
     public decimal CostoTotal => CostoRepuestos + CostoManoObra;
+
+    public List<OrdenAdjunto> Adjuntos { get; set; } = new();
 }
