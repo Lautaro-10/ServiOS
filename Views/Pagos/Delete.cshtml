@@ -1,0 +1,20 @@
+@model ServiOS.Models.Pago
+
+@{
+    ViewData["Title"] = $"Anular Pago #{Model.Id}";
+}
+
+<div class="card shadow-sm mx-auto" style="max-width: 600px;">
+    <div class="card-header bg-danger text-white"><h4 class="mb-0">Anular Pago #@Model.Id</h4></div>
+    <div class="card-body">
+        <p>¿Confirmás anular el pago de <strong>$@Model.Importe</strong> asociado a la orden #@Model.OrdenId?</p>
+        <p>El registro se conservará para mantener la auditoría contable.</p>
+        <form asp-action="Delete" method="post">
+            <input type="hidden" name="id" value="@Model.Id" />
+            <div class="d-flex justify-content-between">
+                <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">Cancelar</a>
+                <button type="submit" class="btn btn-danger">Anular pago</button>
+            </div>
+        </form>
+    </div>
+</div>

@@ -1,5 +1,5 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -20,6 +20,14 @@
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark fw-bold text-primary" asp-controller="OrdenesReparacion" asp-action="Index">Órdenes</a>
+                            </li>
+                        }
+                        @if (User.Identity?.IsAuthenticated == true && User.IsInRole("Admin"))
+                        {
                          <li class="nav-item">
                             <a class="nav-link text-dark" asp-controller="Clientes" asp-action="Index">Clientes</a>
                         </li>
@@ -30,11 +38,39 @@
                             <a class="nav-link text-dark" asp-controller="TiposServicio" asp-action="Index">Servicios</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark fw-bold text-primary" asp-controller="OrdenesReparacion" asp-action="Index">Órdenes</a>
-                        </li>
-                        <li class="nav-item">
                             <a class="nav-link text-dark" asp-controller="Pagos" asp-action="Index">Pagos</a>
                         </li>
+                        }
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <li class="nav-item ms-auto d-flex align-items-center gap-2">
+                                <a class="nav-link d-flex align-items-center gap-2" asp-controller="Usuarios" asp-action="Perfil">
+                                    @if (!string.IsNullOrEmpty(User.FindFirst("Avatar")?.Value) &&
+                                         User.FindFirst("Avatar")?.Value != "/img/default-avatar.png")
+                                    {
+                                        <img src="@User.FindFirst("Avatar")?.Value" alt="Avatar" class="rounded-circle" width="32" height="32" />
+                                    }
+                                    else
+                                    {
+                                        <span class="rounded-circle bg-secondary text-white d-inline-flex align-items-center justify-content-center" style="width:32px;height:32px;">
+                                            @(User.Identity.Name?.Substring(0, 1).ToUpperInvariant())
+                                        </span>
+                                    }
+                                    @User.Identity.Name
+                                </a>
+                            </li>
+                            <li class="nav-item d-flex align-items-center">
+                                <form asp-controller="Usuarios" asp-action="Logout" method="post">
+                                    <button type="submit" class="btn btn-outline-secondary btn-sm">Cerrar sesión</button>
+                                </form>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item ms-auto">
+                                <a class="nav-link" asp-controller="Usuarios" asp-action="Login">Iniciar sesión</a>
+                            </li>
+                        }
                     </ul>
                 </div>
             </div>
@@ -48,7 +84,7 @@
 
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; 2026 - ServiOS - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            &copy; 2026 - ServiOS
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>

@@ -20,13 +20,7 @@
                 <span asp-validation-for="OrdenId" class="text-danger"></span>
             </div>
 
-            <div class="mb-3">
-                <label asp-for="UsuarioCobroId" class="form-label">Empleado que recibe el pago</label>
-                <select asp-for="UsuarioCobroId" class="form-select" asp-items="ViewBag.Usuarios">
-                    <option value="">-- Seleccionar Usuario --</option>
-                </select>
-                <span asp-validation-for="UsuarioCobroId" class="text-danger"></span>
-            </div>
+            <p class="text-muted">Cobro registrado por: <strong>@User.Identity?.Name</strong></p>
 
             <div class="row mb-3">
                 <div class="col-md-6">

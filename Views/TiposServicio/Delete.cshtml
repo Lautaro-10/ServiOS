@@ -1,0 +1,24 @@
+@model ServiOS.Models.TipoServicio
+
+@{
+    ViewData["Title"] = "Eliminar Tipo de Servicio";
+}
+
+<div class="card shadow-sm mx-auto" style="max-width: 600px;">
+    <div class="card-header bg-danger text-white"><h4 class="mb-0">Eliminar servicio</h4></div>
+    <div class="card-body">
+        @if (ViewBag.Error != null)
+        {
+            <div class="alert alert-danger">@ViewBag.Error</div>
+        }
+        <p>¿Confirmás eliminar el servicio <strong>@Model.Descripcion</strong>?</p>
+        <p class="text-danger">La operación puede ser rechazada si el servicio está en uso por órdenes.</p>
+        <form asp-action="Delete" method="post">
+            <input type="hidden" name="id" value="@Model.Id" />
+            <div class="d-flex justify-content-between">
+                <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+                <button type="submit" class="btn btn-danger">Eliminar servicio</button>
+            </div>
+        </form>
+    </div>
+</div>
