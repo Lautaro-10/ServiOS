@@ -1,17 +1,22 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using MySqlConnector;
+using ServiOS.Helpers;
 using ServiOS.Models;
 
 namespace ServiOS.Controllers;
 
+[Authorize]
 public class OrdenesReparacionController : Controller
 {
     private readonly string _connectionString;
+    private readonly IWebHostEnvironment _environment;
 
-    public OrdenesReparacionController(IConfiguration configuration)
+    public OrdenesReparacionController(IConfiguration configuration, IWebHostEnvironment environment)
     {
         _connectionString = configuration.GetConnectionString("DefaultConnection") ?? "";
+        _environment = environment;
     }
 
     private void CargarSelectLists()
@@ -24,7 +29,7 @@ public class OrdenesReparacionController : Controller
         {
             connection.Open();
 
-            // 1. Equipos activos con datos de su dueño
+            //Equipos activos con datos de su dueño
             string sqlEquipos = @"SELECT e.Id, CONCAT(e.Marca, ' ', e.Modelo, ' (IMEI: ', e.Imei, ') - Dueño: ', c.Apellido, ' ', c.Nombre) AS Info
                                   FROM Equipos e
                                   INNER JOIN Clientes c ON e.ClienteId = c.Id
@@ -41,7 +46,7 @@ public class OrdenesReparacionController : Controller
         {
             connection.Open();
 
-            // 2. Tipos de Servicio
+            //Tipos de Servicio
             string sqlTipos = "SELECT Id, CONCAT(Descripcion, ' (Base: $', CostoBaseEstimado, ')') AS Info FROM TiposServicio";
             using var cmdTipos = new MySqlCommand(sqlTipos, connection);
             using var rTipos = cmdTipos.ExecuteReader();
@@ -55,7 +60,7 @@ public class OrdenesReparacionController : Controller
         {
             connection.Open();
 
-            // 3. Usuarios técnicos activos
+            //Usuarios técnicos activos
             string sqlTecnicos = "SELECT Id, CONCAT(Apellido, ', ', Nombre) AS NombreCompleto FROM Usuarios WHERE Activo = 1";
             using var cmdTecnicos = new MySqlCommand(sqlTecnicos, connection);
             using var rTecnicos = cmdTecnicos.ExecuteReader();
@@ -81,7 +86,7 @@ public class OrdenesReparacionController : Controller
         };
     }
 
-    // GET: OrdenesReparacion
+
 
 public IActionResult Index(string? busqueda, string? estado, int pagina = 1, int tamanio = 5)
 {
@@ -205,7 +210,7 @@ public IActionResult Index(string? busqueda, string? estado, int pagina = 1, int
     return View(modeloPaginado);
 }
 
-    // GET: OrdenesReparacion/Details/5
+
     public IActionResult Details(int id)
     {
         OrdenReparacion? orden = null;
@@ -283,17 +288,18 @@ public IActionResult Index(string? busqueda, string? estado, int pagina = 1, int
             return NotFound();
         }
 
+        orden.Adjuntos = ObtenerAdjuntos(orden.Id);
         return View(orden);
     }
 
-    // GET: OrdenesReparacion/Create
+
     public IActionResult Create()
     {
         CargarSelectLists();
         return View(new OrdenReparacion { FechaIngreso = DateTime.Today });
     }
 
-    // POST: OrdenesReparacion/Create
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public IActionResult Create(OrdenReparacion orden)
@@ -337,7 +343,7 @@ public IActionResult Index(string? busqueda, string? estado, int pagina = 1, int
         return RedirectToAction(nameof(Index));
     }
 
-    // GET: OrdenesReparacion/Edit/5
+
     public IActionResult Edit(int id)
     {
         OrdenReparacion? orden = ObtenerPorId(id);
@@ -350,7 +356,7 @@ public IActionResult Index(string? busqueda, string? estado, int pagina = 1, int
         return View(orden);
     }
 
-    // POST: OrdenesReparacion/Edit/5
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public IActionResult Edit(int id, OrdenReparacion orden)
@@ -405,21 +411,49 @@ public IActionResult Index(string? busqueda, string? estado, int pagina = 1, int
         return RedirectToAction(nameof(Index));
     }
 
-    // GET: OrdenesReparacion/Delete/5
+
+    [Authorize(Policy = "SoloAdmin")]
     public IActionResult Delete(int id)
     {
-        return Details(id);
+        var orden = ObtenerPorId(id);
+        if (orden == null)
+        {
+            return NotFound();
+        }
+
+        return View(orden);
     }
 
-    // POST: OrdenesReparacion/Delete/5
+
     [HttpPost]
     [ActionName("Delete")]
+    [Authorize(Policy = "SoloAdmin")]
     [ValidateAntiForgeryToken]
     public IActionResult DeleteConfirmed(int id)
     {
         using (var connection = new MySqlConnection(_connectionString))
         {
             connection.Open();
+
+            const string referenciasSql = @"SELECT
+                (SELECT COUNT(1) FROM Pagos WHERE OrdenId = @id) +
+                (SELECT COUNT(1) FROM OrdenAdjuntos WHERE OrdenId = @id)";
+            using (var referenciasCommand = new MySqlCommand(referenciasSql, connection))
+            {
+                referenciasCommand.Parameters.AddWithValue("@id", id);
+                if (Convert.ToInt32(referenciasCommand.ExecuteScalar()) > 0)
+                {
+                    var ordenReferenciada = ObtenerPorId(id);
+                    if (ordenReferenciada == null)
+                    {
+                        return NotFound();
+                    }
+
+                    ViewBag.Error = "No se puede eliminar la orden porque tiene pagos o adjuntos asociados.";
+                    return View("Delete", ordenReferenciada);
+                }
+            }
+
             string sql = "DELETE FROM OrdenesReparacion WHERE Id = @id";
 
             using var command = new MySqlCommand(sql, connection);
@@ -428,6 +462,146 @@ public IActionResult Index(string? busqueda, string? estado, int pagina = 1, int
         }
 
         return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SubirAdjunto(int id, IFormFile? archivo, CancellationToken cancellationToken)
+    {
+        if (archivo == null)
+        {
+            TempData["Error"] = "Seleccioná una imagen para adjuntar.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        var ordenExiste = ObtenerPorId(id);
+        if (ordenExiste == null)
+        {
+            return NotFound();
+        }
+
+        string rutaArchivo;
+        try
+        {
+            rutaArchivo = await ImageUploadHelper.SavePrivateAsync(
+                archivo,
+                _environment.ContentRootPath,
+                "ordenes",
+                cancellationToken);
+        }
+        catch (InvalidDataException exception)
+        {
+            TempData["Error"] = exception.Message;
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        try
+        {
+            using var connection = new MySqlConnection(_connectionString);
+            connection.Open();
+            const string sql = "INSERT INTO OrdenAdjuntos (OrdenId, RutaArchivo) VALUES (@ordenId, @ruta)";
+            using var command = new MySqlCommand(sql, connection);
+            command.Parameters.AddWithValue("@ordenId", id);
+            command.Parameters.AddWithValue("@ruta", rutaArchivo);
+            command.ExecuteNonQuery();
+        }
+        catch (MySqlException)
+        {
+            ImageUploadHelper.DeletePrivateFile(_environment.ContentRootPath, rutaArchivo, "ordenes");
+            throw;
+        }
+
+        TempData["Mensaje"] = "La imagen se adjuntó correctamente.";
+        return RedirectToAction(nameof(Details), new { id });
+    }
+
+    [HttpPost]
+    [Authorize(Policy = "SoloAdmin")]
+    [ValidateAntiForgeryToken]
+    public IActionResult EliminarAdjunto(int id)
+    {
+        string? rutaArchivo;
+        int ordenId;
+
+        using (var connection = new MySqlConnection(_connectionString))
+        {
+            connection.Open();
+            const string selectSql = "SELECT OrdenId, RutaArchivo FROM OrdenAdjuntos WHERE Id = @id";
+            using var selectCommand = new MySqlCommand(selectSql, connection);
+            selectCommand.Parameters.AddWithValue("@id", id);
+            using var reader = selectCommand.ExecuteReader();
+            if (!reader.Read())
+            {
+                return NotFound();
+            }
+
+            ordenId = Convert.ToInt32(reader["OrdenId"]);
+            rutaArchivo = reader["RutaArchivo"].ToString();
+        }
+
+        using (var connection = new MySqlConnection(_connectionString))
+        {
+            connection.Open();
+            const string deleteSql = "DELETE FROM OrdenAdjuntos WHERE Id = @id";
+            using var command = new MySqlCommand(deleteSql, connection);
+            command.Parameters.AddWithValue("@id", id);
+            command.ExecuteNonQuery();
+        }
+
+        ImageUploadHelper.DeletePrivateFile(_environment.ContentRootPath, rutaArchivo, "ordenes");
+        return RedirectToAction(nameof(Details), new { id = ordenId });
+    }
+
+    public IActionResult VerAdjunto(int id)
+    {
+        using var connection = new MySqlConnection(_connectionString);
+        connection.Open();
+        const string sql = "SELECT RutaArchivo FROM OrdenAdjuntos WHERE Id = @id";
+        using var command = new MySqlCommand(sql, connection);
+        command.Parameters.AddWithValue("@id", id);
+        var fileName = Convert.ToString(command.ExecuteScalar());
+        if (string.IsNullOrWhiteSpace(fileName) || Path.GetFileName(fileName) != fileName)
+        {
+            return NotFound();
+        }
+
+        var path = Path.Combine(_environment.ContentRootPath, "App_Data", "uploads", "ordenes", fileName);
+        if (!System.IO.File.Exists(path))
+        {
+            return NotFound();
+        }
+
+        var contentType = Path.GetExtension(fileName).ToLowerInvariant() switch
+        {
+            ".jpg" => "image/jpeg",
+            ".png" => "image/png",
+            ".webp" => "image/webp",
+            _ => "application/octet-stream"
+        };
+        return PhysicalFile(path, contentType);
+    }
+
+    private List<OrdenAdjunto> ObtenerAdjuntos(int ordenId)
+    {
+        var adjuntos = new List<OrdenAdjunto>();
+        using var connection = new MySqlConnection(_connectionString);
+        connection.Open();
+        const string sql = "SELECT Id, OrdenId, RutaArchivo, FechaSubida FROM OrdenAdjuntos WHERE OrdenId = @ordenId ORDER BY FechaSubida DESC";
+        using var command = new MySqlCommand(sql, connection);
+        command.Parameters.AddWithValue("@ordenId", ordenId);
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            adjuntos.Add(new OrdenAdjunto
+            {
+                Id = Convert.ToInt32(reader["Id"]),
+                OrdenId = Convert.ToInt32(reader["OrdenId"]),
+                RutaArchivo = reader["RutaArchivo"].ToString() ?? string.Empty,
+                FechaSubida = Convert.ToDateTime(reader["FechaSubida"])
+            });
+        }
+
+        return adjuntos;
     }
 
     private OrdenReparacion? ObtenerPorId(int id)

@@ -1,9 +1,11 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MySqlConnector;
 using ServiOS.Models;
 
 namespace ServiOS.Controllers;
 
+[Authorize(Policy = "SoloAdmin")]
 public class TiposServicioController : Controller
 {
     private readonly string _connectionString;
@@ -147,14 +149,26 @@ public class TiposServicioController : Controller
     [ValidateAntiForgeryToken]
     public IActionResult DeleteConfirmed(int id)
     {
-        using (var connection = new MySqlConnection(_connectionString))
+        try
         {
+            using var connection = new MySqlConnection(_connectionString);
             connection.Open();
-            string sql = "DELETE FROM TiposServicio WHERE Id = @id";
+            const string sql = "DELETE FROM TiposServicio WHERE Id = @id";
 
             using var command = new MySqlCommand(sql, connection);
             command.Parameters.AddWithValue("@id", id);
             command.ExecuteNonQuery();
+        }
+        catch (MySqlException exception) when (exception.Number == 1451)
+        {
+            var tipo = ObtenerPorId(id);
+            if (tipo == null)
+            {
+                return NotFound();
+            }
+
+            ViewBag.Error = "No se puede eliminar el servicio porque está asociado a órdenes.";
+            return View("Delete", tipo);
         }
 
         return RedirectToAction(nameof(Index));

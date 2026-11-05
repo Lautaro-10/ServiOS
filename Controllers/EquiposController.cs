@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using MySqlConnector;
@@ -5,6 +6,7 @@ using ServiOS.Models;
 
 namespace ServiOS.Controllers;
 
+[Authorize(Policy = "SoloAdmin")]
 public class EquiposController : Controller
 {
     private readonly string _connectionString;
@@ -264,7 +266,13 @@ public class EquiposController : Controller
     // GET: Equipos/Delete/5
     public IActionResult Delete(int id)
     {
-        return Details(id);
+        var equipo = ObtenerPorId(id);
+        if (equipo == null)
+        {
+            return NotFound();
+        }
+
+        return View(equipo);
     }
 
     // POST: Equipos/Delete/5
@@ -273,14 +281,26 @@ public class EquiposController : Controller
     [ValidateAntiForgeryToken]
     public IActionResult DeleteConfirmed(int id)
     {
-        using (var connection = new MySqlConnection(_connectionString))
+        try
         {
+            using var connection = new MySqlConnection(_connectionString);
             connection.Open();
-            string sql = "DELETE FROM Equipos WHERE Id = @id";
+            const string sql = "DELETE FROM Equipos WHERE Id = @id";
 
             using var command = new MySqlCommand(sql, connection);
             command.Parameters.AddWithValue("@id", id);
             command.ExecuteNonQuery();
+        }
+        catch (MySqlException exception) when (exception.Number == 1451)
+        {
+            var equipo = ObtenerPorId(id);
+            if (equipo == null)
+            {
+                return NotFound();
+            }
+
+            ViewBag.Error = "No se puede eliminar el equipo porque tiene órdenes asociadas.";
+            return View("Delete", equipo);
         }
 
         return RedirectToAction(nameof(Index));

@@ -1,9 +1,11 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MySqlConnector;
 using ServiOS.Models;
 
 namespace ServiOS.Controllers;
 
+[Authorize(Policy = "SoloAdmin")]
 public class ClientesController : Controller
 {
     private readonly string _connectionString;
@@ -184,14 +186,26 @@ public class ClientesController : Controller
     [ValidateAntiForgeryToken]
     public IActionResult DeleteConfirmed(int id)
     {
-        using (var connection = new MySqlConnection(_connectionString))
+        try
         {
+            using var connection = new MySqlConnection(_connectionString);
             connection.Open();
-            string sql = "DELETE FROM Clientes WHERE Id = @id";
+            const string sql = "DELETE FROM Clientes WHERE Id = @id";
 
             using var command = new MySqlCommand(sql, connection);
             command.Parameters.AddWithValue("@id", id);
             command.ExecuteNonQuery();
+        }
+        catch (MySqlException exception) when (exception.Number == 1451)
+        {
+            var cliente = ObtenerPorId(id);
+            if (cliente == null)
+            {
+                return NotFound();
+            }
+
+            ViewBag.Error = "No se puede eliminar el cliente porque tiene equipos asociados.";
+            return View("Delete", cliente);
         }
 
         return RedirectToAction(nameof(Index));
