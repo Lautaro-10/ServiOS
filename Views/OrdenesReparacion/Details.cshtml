@@ -10,6 +10,14 @@
         <span class="badge bg-warning text-dark fs-6">@Model.Estado</span>
     </div>
     <div class="card-body">
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger">@TempData["Error"]</div>
+        }
+        @if (TempData["Mensaje"] != null)
+        {
+            <div class="alert alert-success">@TempData["Mensaje"]</div>
+        }
         <div class="row">
             <div class="col-md-6 border-end">
                 <h5 class="text-primary">Dispositivo y Cliente</h5>
@@ -47,6 +55,42 @@
                 <span class="text-muted d-block">Repuestos</span>
                 <strong>$@Model.CostoRepuestos</strong>
             </div>
+            <hr />
+            <section>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0">Imágenes adjuntas</h5>
+                    <form asp-action="SubirAdjunto" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data" class="d-flex gap-2">
+                        <input type="file" name="archivo" accept=".jpg,.jpeg,.png,.webp" class="form-control form-control-sm" required />
+                        <button type="submit" class="btn btn-sm btn-primary">Subir imagen</button>
+                    </form>
+                </div>
+                <p class="text-muted small">Formatos admitidos: JPG, PNG y WEBP. Tamaño máximo: 5 MB.</p>
+                @if (Model.Adjuntos.Count == 0)
+                {
+                    <p class="text-muted">Todavía no hay imágenes adjuntas.</p>
+                }
+                else
+                {
+                    <div class="row g-3">
+                        @foreach (var adjunto in Model.Adjuntos)
+                        {
+                            <div class="col-6 col-md-4 col-lg-3">
+                                <a asp-action="VerAdjunto" asp-route-id="@adjunto.Id" target="_blank" rel="noopener">
+                                    <img src="@Url.Action("VerAdjunto", new { id = adjunto.Id })" alt="Imagen adjunta de la orden" class="img-fluid rounded border" />
+                                </a>
+                                <div class="small text-muted mt-1">@adjunto.FechaSubida.ToString("dd/MM/yyyy HH:mm")</div>
+                                @if (User.IsInRole("Admin"))
+                                {
+                                    <form asp-action="EliminarAdjunto" method="post" class="mt-1">
+                                        <input type="hidden" name="id" value="@adjunto.Id" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Eliminar imagen</button>
+                                    </form>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            </section>
             <div class="col-4">
                 <span class="text-muted d-block">Mano de Obra</span>
                 <strong>$@Model.CostoManoObra</strong>

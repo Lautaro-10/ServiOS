@@ -1,0 +1,24 @@
+@model ServiOS.Models.OrdenReparacion
+
+@{
+    ViewData["Title"] = $"Eliminar Orden #{Model.Id}";
+}
+
+<div class="card shadow-sm mx-auto" style="max-width: 650px;">
+    <div class="card-header bg-danger text-white"><h4 class="mb-0">Eliminar Orden #@Model.Id</h4></div>
+    <div class="card-body">
+        @if (ViewBag.Error != null)
+        {
+            <div class="alert alert-danger">@ViewBag.Error</div>
+        }
+        <p>¿Confirmás eliminar la orden #@Model.Id, con estado <strong>@Model.Estado</strong>?</p>
+        <p class="text-danger">No se puede deshacer esta operación.</p>
+        <form asp-action="Delete" method="post">
+            <input type="hidden" name="id" value="@Model.Id" />
+            <div class="d-flex justify-content-between">
+                <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+                <button type="submit" class="btn btn-danger">Eliminar orden</button>
+            </div>
+        </form>
+    </div>
+</div>

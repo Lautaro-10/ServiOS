@@ -1,0 +1,24 @@
+@model ServiOS.Models.Equipo
+
+@{
+    ViewData["Title"] = "Eliminar Equipo";
+}
+
+<div class="card shadow-sm mx-auto" style="max-width: 600px;">
+    <div class="card-header bg-danger text-white"><h4 class="mb-0">Eliminar dispositivo</h4></div>
+    <div class="card-body">
+        @if (ViewBag.Error != null)
+        {
+            <div class="alert alert-danger">@ViewBag.Error</div>
+        }
+        <p>¿Confirmás eliminar <strong>@Model.Marca @Model.Modelo</strong> (IMEI: @Model.Imei)?</p>
+        <p class="text-danger">La operación puede ser rechazada si el equipo tiene órdenes asociadas.</p>
+        <form asp-action="Delete" method="post">
+            <input type="hidden" name="id" value="@Model.Id" />
+            <div class="d-flex justify-content-between">
+                <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+                <button type="submit" class="btn btn-danger">Eliminar dispositivo</button>
+            </div>
+        </form>
+    </div>
+</div>
