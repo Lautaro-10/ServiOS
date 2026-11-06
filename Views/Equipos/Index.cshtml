@@ -1,4 +1,4 @@
-@model IEnumerable<ServiOS.Models.Equipo>
+@model ServiOS.Models.PaginacionRespuesta<ServiOS.Models.Equipo>
 
 @{
     ViewData["Title"] = "Equipos";
@@ -20,7 +20,7 @@
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
+@foreach (var item in Model.Elementos) {
         <tr>
             <td><strong>@item.Marca</strong> @item.Modelo</td>
             <td><code>@item.Imei</code></td>
@@ -41,3 +41,28 @@
 }
     </tbody>
 </table>
+
+<div class="d-flex justify-content-between align-items-center mt-3">
+    <span class="text-muted small">
+        Página @Model.PaginaActual de @Math.Max(Model.TotalPaginas, 1) · @Model.TotalRegistros equipo(s)
+    </span>
+    @if (Model.TotalPaginas > 1)
+    {
+        <nav aria-label="Paginación de equipos">
+            <ul class="pagination mb-0">
+                <li class="page-item @(!Model.TienePaginaAnterior ? "disabled" : "")">
+                    <a class="page-link" asp-action="Index" asp-route-pagina="@(Model.PaginaActual - 1)">Anterior</a>
+                </li>
+                @for (var pagina = 1; pagina <= Model.TotalPaginas; pagina++)
+                {
+                    <li class="page-item @(pagina == Model.PaginaActual ? "active" : "")">
+                        <a class="page-link" asp-action="Index" asp-route-pagina="@pagina">@pagina</a>
+                    </li>
+                }
+                <li class="page-item @(!Model.TienePaginaSiguiente ? "disabled" : "")">
+                    <a class="page-link" asp-action="Index" asp-route-pagina="@(Model.PaginaActual + 1)">Siguiente</a>
+                </li>
+            </ul>
+        </nav>
+    }
+</div>

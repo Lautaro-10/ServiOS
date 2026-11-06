@@ -10,6 +10,7 @@ namespace ServiOS.Controllers;
 [Authorize(Policy = "SoloAdmin")]
 public class PagosController : Controller
 {
+    private const int TamanioPagina = 10;
     private readonly string _connectionString;
 
     public PagosController(IConfiguration configuration)
@@ -17,11 +18,22 @@ public class PagosController : Controller
         _connectionString = configuration.GetConnectionString("DefaultConnection") ?? "";
     }
 
-    public IActionResult Index()
+    public IActionResult Index(int pagina = 1)
     {
+        pagina = Math.Max(1, pagina);
         var pagos = new List<Pago>();
         using var connection = new MySqlConnection(_connectionString);
         connection.Open();
+
+        int totalRegistros;
+        using (var countCommand = new MySqlCommand("SELECT COUNT(1) FROM Pagos", connection))
+        {
+            totalRegistros = Convert.ToInt32(countCommand.ExecuteScalar());
+        }
+
+        var totalPaginas = (int)Math.Ceiling(totalRegistros / (double)TamanioPagina);
+        pagina = totalPaginas == 0 ? 1 : Math.Min(pagina, totalPaginas);
+
         const string sql = @"SELECT p.Id, p.OrdenId, p.UsuarioCobroId, p.FechaPago, p.Importe, p.Concepto, p.Anulado,
                                     o.EquipoId, e.Marca, e.Modelo, e.Imei,
                                     c.Nombre AS ClienteNombre, c.Apellido AS ClienteApellido, c.Dni,
@@ -31,15 +43,25 @@ public class PagosController : Controller
                              INNER JOIN Equipos e ON o.EquipoId = e.Id
                              INNER JOIN Clientes c ON e.ClienteId = c.Id
                              INNER JOIN Usuarios u ON p.UsuarioCobroId = u.Id
-                             ORDER BY p.FechaPago DESC, p.Id DESC";
+                             ORDER BY p.FechaPago DESC, p.Id DESC
+                             LIMIT @tamanioPagina OFFSET @offset";
         using var command = new MySqlCommand(sql, connection);
+        command.Parameters.AddWithValue("@tamanioPagina", TamanioPagina);
+        command.Parameters.AddWithValue("@offset", (pagina - 1) * TamanioPagina);
         using var reader = command.ExecuteReader();
         while (reader.Read())
         {
             pagos.Add(MapearPago(reader));
         }
 
-        return View(pagos);
+        return View(new PaginacionRespuesta<Pago>
+        {
+            Elementos = pagos,
+            PaginaActual = pagina,
+            TotalPaginas = totalPaginas,
+            TotalRegistros = totalRegistros,
+            TamanioPagina = TamanioPagina
+        });
     }
 
     public IActionResult Details(int id)

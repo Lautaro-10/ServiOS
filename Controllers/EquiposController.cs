@@ -9,6 +9,7 @@ namespace ServiOS.Controllers;
 [Authorize(Policy = "SoloAdmin")]
 public class EquiposController : Controller
 {
+    private const int TamanioPagina = 10;
     private readonly string _connectionString;
 
     public EquiposController(IConfiguration configuration)
@@ -40,21 +41,32 @@ public class EquiposController : Controller
     }
 
     // GET: Equipos
-    public IActionResult Index()
+    public IActionResult Index(int pagina = 1)
     {
+        pagina = Math.Max(1, pagina);
         var equipos = new List<Equipo>();
 
         using (var connection = new MySqlConnection(_connectionString))
         {
             connection.Open();
+            const string sqlCount = "SELECT COUNT(1) FROM Equipos";
+            using (var countCommand = new MySqlCommand(sqlCount, connection))
+            {
+                var totalRegistros = Convert.ToInt32(countCommand.ExecuteScalar());
+                var totalPaginas = (int)Math.Ceiling(totalRegistros / (double)TamanioPagina);
+                pagina = totalPaginas == 0 ? 1 : Math.Min(pagina, totalPaginas);
+
             string sql = @"SELECT e.Id, e.ClienteId, e.Marca, e.Modelo, e.Imei, 
                                   e.ClaveDesbloqueo, e.ObservacionesEsteticas, e.Activo,
                                   c.Nombre AS CliNombre, c.Apellido AS CliApellido, c.Dni AS CliDni
                            FROM Equipos e
                            INNER JOIN Clientes c ON e.ClienteId = c.Id
-                           ORDER BY e.Marca, e.Modelo";
+                           ORDER BY e.Marca, e.Modelo, e.Id
+                           LIMIT @tamanioPagina OFFSET @offset";
 
             using var command = new MySqlCommand(sql, connection);
+            command.Parameters.AddWithValue("@tamanioPagina", TamanioPagina);
+            command.Parameters.AddWithValue("@offset", (pagina - 1) * TamanioPagina);
             using var reader = command.ExecuteReader();
             while (reader.Read())
             {
@@ -77,9 +89,17 @@ public class EquiposController : Controller
                     }
                 });
             }
-        }
 
-        return View(equipos);
+                return View(new PaginacionRespuesta<Equipo>
+                {
+                    Elementos = equipos,
+                    PaginaActual = pagina,
+                    TotalPaginas = totalPaginas,
+                    TotalRegistros = totalRegistros,
+                    TamanioPagina = TamanioPagina
+                });
+            }
+        }
     }
 
     // GET: Equipos/Details/5
